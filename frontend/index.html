@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LangChain Agent — AI 助手</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/languages/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/languages/python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/languages/bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/languages/json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/dist/languages/sql.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#6366f1" stroke-width="2"/>
+            <path d="M8 12h8M12 8v8" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>LangChain Agent</span>
+        </div>
+        <div class="header-status" id="statusBadge">
+          <span class="status-dot"></span>
+          <span id="statusText">就绪</span>
+        </div>
+        <button type="button" class="prompt-config-btn" id="promptConfigBtn" title="约束与提示词配置">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          约束配置
+        </button>
+      </div>
+    </header>
+
+    <!-- Main panels -->
+    <main class="main">
+      <!-- Chat panel -->
+      <section class="panel chat-panel">
+        <div class="panel-header">
+          <h2>对话</h2>
+        </div>
+        <div class="messages" id="messages">
+          <div class="welcome-message">
+            <div class="welcome-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="20" stroke="#6366f1" stroke-width="2"/>
+                <path d="M16 24h16M24 16v16" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p>你好！我是基于 LangChain + DeepSeek 的 AI 助手。</p>
+            <p>我可以帮你查天气、做数学计算、搜索知识库。</p>
+            <div class="welcome-examples">
+              <button class="example-btn" onclick="sendExample('北京今天天气怎么样？')">北京今天天气怎么样？</button>
+              <button class="example-btn" onclick="sendExample('帮我算一下 123 * 456 + 789')">123 * 456 + 789</button>
+              <button class="example-btn" onclick="sendExample('LangChain 是什么？')">LangChain 是什么？</button>
+            </div>
+          </div>
+        </div>
+        <div class="input-area">
+          <textarea id="messageInput" placeholder="输入你的问题，按 Shift+Enter 换行，Enter 发送..." rows="1"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 10l14-7-14 7 14 7-14-7z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Trace panel -->
+      <section class="panel trace-panel">
+        <div class="panel-header">
+          <h2>Agent 面板</h2>
+          <button type="button" class="clear-btn" onclick="clearTrace()">清空记录</button>
+        </div>
+        <div class="trace-panel-body">
+          <div class="tools-registry" id="toolsRegistry">
+            <button type="button" class="tools-registry-head" id="toolsRegistryToggle" aria-expanded="true">
+              <span class="tools-chevron" aria-hidden="true">▼</span>
+              <span class="tools-registry-title">可用工具</span>
+              <span class="tools-count" id="toolsCount"></span>
+            </button>
+            <div class="tools-registry-body" id="toolsRegistryBody">
+              <p class="tools-registry-hint">以下为 Agent 可自动调用的工具（由模型根据问题选择）。</p>
+              <ul class="tools-registry-list" id="toolsRegistryList">
+                <li class="tools-loading">加载中…</li>
+              </ul>
+            </div>
+          </div>
+          <div class="trace-log-scroll">
+            <div class="trace-log" id="traceLog">
+              <div class="trace-empty">
+                <p>等待 Agent 运行…</p>
+                <p class="trace-hint">发送消息后，此处显示思考与工具调用，可点击条目标题折叠内容。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+
+  <!-- System prompt config modal -->
+  <div class="modal-overlay" id="promptModal" role="dialog" aria-modal="true" aria-labelledby="promptModalTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 id="promptModalTitle">Agent 约束与提示词</h2>
+        <button type="button" class="modal-close" id="promptModalClose" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">
+          修改下方的 <strong>System Prompt</strong> 以改变 Agent 的行为约束和角色设定。保存后将立即生效，影响后续所有对话。
+        </p>
+        <textarea id="promptEditor" class="prompt-editor" placeholder="在此输入 Agent 的系统提示词..." rows="12" spellcheck="false"></textarea>
+        <div class="modal-footer">
+          <button type="button" class="modal-btn modal-btn-primary" id="promptSaveBtn">保存并应用</button>
+          <button type="button" class="modal-btn modal-btn-secondary" id="promptCancelBtn">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
