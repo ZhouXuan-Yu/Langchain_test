@@ -11,6 +11,16 @@ if (typeof marked !== "undefined") {
     breaks: true,
     gfm: true,
   });
+
+  // Register highlight.js languages (loaded as UMD globals)
+  if (typeof hljs !== "undefined") {
+    if (typeof javascript !== "undefined") hljs.registerLanguage("javascript", javascript);
+    if (typeof python !== "undefined") hljs.registerLanguage("python", python);
+    if (typeof bash !== "undefined") hljs.registerLanguage("bash", bash);
+    if (typeof json !== "undefined") hljs.registerLanguage("json", json);
+    if (typeof sql !== "undefined") hljs.registerLanguage("sql", sql);
+  }
+
   const renderer = new marked.Renderer();
 
   renderer.code = function (code, lang) {
@@ -81,6 +91,21 @@ function mapVariantClass(key) {
   if (key === "answer") return "answer";
   if (key === "error") return "error";
   return "";
+}
+
+function wireTraceCardToggle(card) {
+  const btn = card.querySelector(".trace-card-toggle");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    card.classList.toggle("is-collapsed");
+    btn.setAttribute("aria-expanded", String(!card.classList.contains("is-collapsed")));
+  });
+}
+
+function setTraceVariant(card, badgeKey) {
+  card.classList.remove("thinking", "tool-call", "tool-result", "answer", "error");
+  const v = mapVariantClass(badgeKey);
+  if (v) card.classList.add(v);
 }
 
 function truncate(text, max) {
