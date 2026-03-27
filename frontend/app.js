@@ -2,6 +2,8 @@
 let isStreaming = false;
 let currentAnswerEl = null;
 let currentTraceCard = null;
+let currentTurnEl = null;
+let currentTurnIndex = 0;
 
 /* ── Configure marked + highlight.js ───────────────────── */
 if (typeof marked !== "undefined") {
@@ -157,6 +159,8 @@ async function sendMessage() {
   setLoading(true);
   setStatus("思考中...", "loading");
 
+  const turnIndex = ++currentTurnIndex;
+  currentTurnEl = createTraceTurn(turnIndex, message);
   currentTraceCard = addTraceCard("thinking", "Agent 开始思考…");
 
   try {
@@ -202,6 +206,7 @@ async function sendMessage() {
     setStatus("就绪", "");
     currentAnswerEl = null;
     currentTraceCard = null;
+    currentTurnEl = null;
   }
 }
 
@@ -241,24 +246,38 @@ function handleEvent(event) {
 }
 
 /* ── Trace helpers (collapsible cards) ────────────────────── */
-function wireTraceCardToggle(card) {
-  const btn = card.querySelector(".trace-card-toggle");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    card.classList.toggle("is-collapsed");
-    btn.setAttribute("aria-expanded", String(!card.classList.contains("is-collapsed")));
-  });
-}
+function createTraceTurn(index, userMessage) {
+  const empty = traceLogEl.querySelector(".trace-empty");
+  if (empty) empty.remove();
 
-function setTraceVariant(card, badgeKey) {
-  card.classList.remove("thinking", "tool-call", "tool-result", "answer", "error");
-  const v = mapVariantClass(badgeKey);
-  if (v) card.classList.add(v);
+  const turn = document.createElement("div");
+  turn.className = "trace-turn";
+
+  const label = truncate(userMessage, 40);
+
+  turn.innerHTML = `
+    <button type="button" class="trace-turn-header" aria-expanded="true">
+      <span class="trace-turn-chevron" aria-hidden="true">▼</span>
+      <span class="trace-turn-icon" aria-hidden="true">U</span>
+      <span class="trace-turn-label">${escapeHtml(label)}</span>
+      <span class="trace-turn-count" data-count="0">0 步</span>
+    </button>
+    <div class="trace-turn-cards"></div>
+  `;
+
+  const header = turn.querySelector(".trace-turn-header");
+  header.addEventListener("click", () => {
+    turn.classList.toggle("is-collapsed");
+    header.setAttribute("aria-expanded", String(!turn.classList.contains("is-collapsed")));
+  });
+
+  traceLogEl.appendChild(turn);
+  scrollToBottom(traceLogEl);
+  return turn;
 }
 
 function addTraceCard(badgeKey, content) {
-  const empty = traceLogEl.querySelector(".trace-empty");
-  if (empty) empty.remove();
+  const cardsContainer = currentTurnEl ? currentTurnEl.querySelector(".trace-turn-cards") : traceLogEl;
 
   const card = document.createElement("div");
   const label = labelForBadge(badgeKey);
@@ -277,7 +296,17 @@ function addTraceCard(badgeKey, content) {
     </div>
   `;
   wireTraceCardToggle(card);
-  traceLogEl.appendChild(card);
+  cardsContainer.appendChild(card);
+
+  if (currentTurnEl) {
+    const countEl = currentTurnEl.querySelector(".trace-turn-count");
+    if (countEl) {
+      const n = cardsContainer.children.length;
+      countEl.textContent = `${n} 步`;
+      countEl.setAttribute("data-count", String(n));
+    }
+  }
+
   scrollToBottom(traceLogEl);
   return card;
 }
@@ -297,6 +326,8 @@ function updateTraceCard(card, badgeKey, content) {
 }
 
 function clearTrace() {
+  currentTurnIndex = 0;
+  currentTurnEl = null;
   traceLogEl.innerHTML = `
     <div class="trace-empty">
       <p>等待 Agent 运行…</p>

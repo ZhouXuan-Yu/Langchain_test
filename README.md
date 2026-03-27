@@ -68,23 +68,46 @@ python backend/main.py
 └── README.md
 ```
 
-## 快速开始
+## 环境配置（从零开始）
 
-### 1. 安装依赖
+> 完整流程：创建 conda 环境 → 安装依赖 → 配置 API Key → 启动服务
+
+### Step 1：创建 conda 环境
 
 ```bash
+# 新建一个 Python 3.11 的独立环境（避免与全局 Python 冲突）
+conda create -n langchain-agent python=3.11 -y
+
+# 进入该环境
+conda activate langchain-agent
+```
+
+### Step 2：安装 Python 依赖
+
+```bash
+# 确保已进入项目根目录
+cd D:/Aprogress/Test
+
+# 安装所有依赖（一行命令）
 pip install -r requirements.txt
 ```
 
-### 2. 配置 DeepSeek API Key
+> 如果安装较慢，可以切换到国内镜像源：
+> ```bash
+> pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+> ```
 
-复制环境变量模板并填入你的 API Key：
+### Step 3：配置 DeepSeek API Key
 
 ```bash
+# 从模板复制 .env 文件（Windows PowerShell）
+copy .env.example .env
+
+# 或 Linux/macOS
 cp .env.example .env
 ```
 
-编辑 `.env`：
+用任意编辑器打开 `.env`，填入你的 DeepSeek API Key：
 
 ```
 DEEPSEEK_API_KEY=sk-your-deepseek-api-key
@@ -92,23 +115,33 @@ DEEPSEEK_MODEL=deepseek-chat
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 ```
 
-### 3. 启动后端
+> 没有 API Key？请访问 [https://platform.deepseek.com/](https://platform.deepseek.com/) 注册并获取。
 
-> **端口占用问题**：如果提示端口已被占用，请改用其他端口（如 9000），修改 `main.py` 中 `uvicorn.run` 的 `port` 参数即可。
-
-从项目根目录启动：
+### Step 4：启动后端服务
 
 ```bash
+# 从项目根目录启动（PowerShell / Linux / macOS 通用）
 python backend/main.py
 ```
 
-服务启动在 `http://localhost:9000`
+成功后会看到：
 
-> 前端静态文件由 FastAPI 自动托管，修改前端代码后刷新浏览器即可，无需重启后端。
+```
+==================================================
+ LangChain Agent 服务已启动
+ http://localhost:9000/
+==================================================
+```
 
-### 4. 打开前端
+> **端口被占用？** 修改 `backend/main.py` 末尾 `uvicorn.run(..., port=9000)` 中的端口号即可。
 
-在浏览器中访问 `http://localhost:9000`
+### Step 5：打开浏览器
+
+直接访问 **`http://localhost:9000`**
+
+---
+
+> **每次使用只需执行 Step 4 和 Step 5**（Step 1-3 仅首次配置或换电脑时需要）。
 
 ## 功能说明
 
@@ -146,6 +179,8 @@ data: {"type": "done", "content": ""}
 
 ## 开发说明
 
+- 后端依赖 `httpx` 提供同步 HTTP 能力（如需自定义工具调用外部 API）
 - 后端默认从 `.env` 文件加载环境变量
 - 前端静态文件由 FastAPI 通过 `StaticFiles` 自动托管
 - 修改前端代码后刷新浏览器即可，无需重启后端
+- 修改后端 Python 代码后需重启后端服务

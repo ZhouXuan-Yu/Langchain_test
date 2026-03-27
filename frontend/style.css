@@ -663,7 +663,6 @@ html, body {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -689,6 +688,99 @@ html, body {
 .trace-hint {
   font-size: 12px;
   margin-top: 8px;
+}
+
+/* ── Trace turn groups ─────────────────────────────────── */
+.trace-turn {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+.trace-turn + .trace-turn {
+  margin-top: 6px;
+}
+
+.trace-turn.is-collapsed {
+  background: transparent;
+}
+
+.trace-turn-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.trace-turn-header:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: var(--accent);
+}
+
+.trace-turn-chevron {
+  font-size: 9px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.trace-turn.is-collapsed .trace-turn-chevron {
+  transform: rotate(-90deg);
+}
+
+.trace-turn-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 50%;
+  background: var(--user-bubble);
+  color: #fff;
+  line-height: 1;
+}
+
+.trace-turn-label {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trace-turn-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.trace-turn-cards {
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trace-turn.is-collapsed .trace-turn-cards {
+  display: none;
 }
 
 .trace-card {
